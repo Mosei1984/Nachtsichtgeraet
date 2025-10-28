@@ -34,6 +34,42 @@ Raspberry Pi 3 B basiertes Nachtsichtgerät mit Touchscreen-Steuerung.
 
 ## Installation
 
+### Automatische Installation (empfohlen)
+
+```bash
+# Repository klonen oder Dateien auf Raspberry Pi kopieren
+git clone https://github.com/Mosei1984/Nachtsichtgeraet.git
+cd Nachtsichtgeraet
+
+# Setup-Skript ausführen
+sudo bash setup.sh
+```
+
+Das Setup-Skript führt automatisch folgende Schritte aus:
+1. System aktualisieren
+2. Abhängigkeiten installieren (python3-opencv, python3-picamera2, python3-numpy)
+3. Arbeitsverzeichnis `/opt/nachtsicht` erstellen
+4. Python-Skripte nach `/opt/nachtsicht` kopieren
+5. USB-Mount-Verzeichnis `/media/usb` vorbereiten
+6. Systemd-Service installieren und aktivieren
+
+Nach dem Setup:
+```bash
+# Raspberry Pi neu starten (Service startet automatisch)
+sudo reboot
+
+# Oder Service manuell starten
+sudo systemctl start nachtsicht.service
+
+# Status prüfen
+sudo systemctl status nachtsicht.service
+
+# Live-Logs anzeigen
+sudo journalctl -u nachtsicht.service -f
+```
+
+### Manuelle Installation
+
 ```bash
 # Dependencies
 sudo apt-get update
@@ -100,31 +136,30 @@ EST_VIDEO_MBPS = 0.5                  # Video Bitrate (MB/s)
 
 ## Autostart
 
-```bash
-# Systemd Service erstellen
-sudo nano /etc/systemd/system/nachtsicht.service
-```
+Der Autostart wird durch `setup.sh` automatisch konfiguriert. Der Service:
+- Startet automatisch beim Booten (10 Sekunden Verzögerung)
+- Nutzt `/opt/nachtsicht/nachtsicht_fullscreen.py`
+- Läuft als root (für Hardware-Zugriff)
+- Neustart bei Fehler mit 15s Verzögerung
+- Logs in systemd journal
 
-```ini
-[Unit]
-Description=Nachtsicht Device
-After=multi-user.target
+Service-Details siehe `nachtsicht.service`
 
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/home/pi
-ExecStart=/usr/bin/python3 /home/pi/nachtsicht_optimized.py
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
+### Service-Befehle
 
 ```bash
-# Service aktivieren
-sudo systemctl enable nachtsicht.service
+# Service starten/stoppen/neu starten
 sudo systemctl start nachtsicht.service
+sudo systemctl stop nachtsicht.service
+sudo systemctl restart nachtsicht.service
+
+# Autostart aktivieren/deaktivieren
+sudo systemctl enable nachtsicht.service
+sudo systemctl disable nachtsicht.service
+
+# Status und Logs
+sudo systemctl status nachtsicht.service
+sudo journalctl -u nachtsicht.service -f
 ```
 
 ## Lizenz
