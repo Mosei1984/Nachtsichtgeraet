@@ -61,8 +61,8 @@ def ensure_dirs():
         pdir = os.path.join(usb, "Nachtsicht_Fotos")
         vdir = os.path.join(usb, "Nachtsicht_Videos")
     else:
-        pdir = "/home/valentin/Nachtsicht_Fotos"
-        vdir = "/home/valentin/Nachtsicht_Videos"
+        pdir = "/home/pi/Nachtsicht_Fotos"
+        vdir = "/home/pi/Nachtsicht_Videos"
     os.makedirs(pdir, exist_ok=True)
     os.makedirs(vdir, exist_ok=True)
     return pdir, vdir
@@ -92,7 +92,7 @@ def free_bytes_path():
     if (now - _free_bytes_time) < 2.0:
         return _free_bytes_cache
     
-    path = usb_mountpoint() or "/home/valentin"
+    path = usb_mountpoint() or "/home/pi"
     _free_bytes_cache = shutil.disk_usage(path).free
     _free_bytes_time = now
     return _free_bytes_cache
