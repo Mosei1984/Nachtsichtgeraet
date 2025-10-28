@@ -1,0 +1,104 @@
+name: Bug Report
+description: Melde ein reproduzierbares Problem
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für das Melden eines Bugs! Bitte fülle die folgenden Felder aus.
+  
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Was ist passiert?
+      description: Beschreibe das Problem klar und deutlich.
+      placeholder: Beschreibe den Bug...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zur Reproduktion
+      description: Wie kann der Bug reproduziert werden?
+      placeholder: |
+        1. Gerät einschalten
+        2. Doppel-Tap für Live-Ansicht
+        3. Langer Tap (>0.8s) für Video
+        4. ...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      description: Was sollte stattdessen passieren?
+    validations:
+      required: true
+  
+  - type: input
+    id: version
+    attributes:
+      label: Nachtsichtgerät Version
+      description: Welche Version verwendest du?
+      placeholder: z.B. v0.1.0 oder Commit-Hash 1a2b3c4
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: pi-model
+    attributes:
+      label: Raspberry Pi Modell
+      options:
+        - Pi 3 B
+        - Pi 3 B+
+        - Pi 4
+        - Anderes (bitte unten angeben)
+    validations:
+      required: true
+  
+  - type: input
+    id: os-version
+    attributes:
+      label: Betriebssystem
+      description: Welches OS und welche Version?
+      placeholder: z.B. Raspbian Bookworm, Kernel 6.x
+    validations:
+      required: true
+  
+  - type: input
+    id: camera
+    attributes:
+      label: Kamera-Modul
+      description: Welches Kamera-Modul verwendest du?
+      placeholder: z.B. IMX219, Picamera2 v2
+  
+  - type: input
+    id: display
+    attributes:
+      label: Display & Touch
+      description: Welches Display und Touch-Interface?
+      placeholder: z.B. 3.5" SPI (/dev/fb1), ADS7846 (/dev/input/event0)
+  
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevante Log-Ausgaben (journalctl, dmesg)
+      placeholder: |
+        sudo journalctl -u nachtsicht.service -n 200
+        dmesg | tail -n 200
+      render: shell
+  
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Fotos
+      description: Füge Screenshots oder Fotos des Fehlers hinzu (falls zutreffend)
+  
+  - type: textarea
+    id: additional
+    attributes:
+      label: Zusätzliche Informationen
+      description: Weitere Details, die helfen könnten (Verkabelung, Hardware-Änderungen, etc.)

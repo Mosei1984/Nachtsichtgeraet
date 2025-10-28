@@ -1,0 +1,38 @@
+name: Feature Request
+description: Schlage eine neue Funktion oder Verbesserung vor
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deinen Vorschlag! Bitte beschreibe deine Idee.
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Bedarf
+      description: Welches Problem soll gelöst werden oder welcher Use-Case wird adressiert?
+      placeholder: Beschreibe das Problem oder den Bedarf...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: solution
+    attributes:
+      label: Gewünschte Lösung
+      description: Wie sollte die Lösung aussehen? (UI, Gesten, HUD-Elemente, etc.)
+      placeholder: Beschreibe deine Lösung...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Lösungen
+      description: Welche Alternativen hast du in Betracht gezogen?
+  
+  - type: textarea
+    id: additional
+    attributes:
+      label: Zusätzlicher Kontext
+      description: Screenshots, Mockups, Links zu ähnlichen Implementierungen, etc.

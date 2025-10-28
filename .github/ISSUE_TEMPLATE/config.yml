@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Fragen & Hilfe
+    url: https://github.com/Mosei1984/Nachtsichtgeraet/discussions
+    about: Stelle Fragen oder bitte um Unterstützung in den Discussions.
+  - name: Sicherheitsproblem melden
+    url: https://github.com/Mosei1984/Nachtsichtgeraet/security
+    about: Melde Sicherheitslücken privat über die GitHub Security Advisories.

@@ -1,6 +1,13 @@
 # Nachtsichtgerät (Night Vision Device)
 
+[![CI](https://github.com/Mosei1984/Nachtsichtgeraet/actions/workflows/ci.yml/badge.svg)](https://github.com/Mosei1984/Nachtsichtgeraet/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Platform: Raspberry Pi](https://img.shields.io/badge/platform-Raspberry%20Pi-red.svg)](https://www.raspberrypi.org/)
+
 Raspberry Pi 3 B basiertes Nachtsichtgerät mit Touchscreen-Steuerung.
+
+> **Quick Links**: [Installation](#installation) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md)
 
 ## Hardware
 

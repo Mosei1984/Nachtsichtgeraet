@@ -120,3 +120,17 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Ruff cache
+.ruff_cache/
+
+# Bandit reports
+bandit-report.txt
+
+# GitHub Actions artifacts
+.github/workflows/artifacts/
+
+# Temporary backup files
+*~
+*.bak
+*.backup

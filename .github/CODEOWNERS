@@ -1,0 +1,18 @@
+# Code Owners für automatische PR Review-Anfragen
+
+# Alle Dateien
+* @Mosei1984
+
+# Python Code
+*.py @Mosei1984
+
+# Dokumentation
+*.md @Mosei1984
+docs/ @Mosei1984
+
+# GitHub-Konfiguration
+.github/ @Mosei1984
+
+# Setup und Service
+setup.sh @Mosei1984
+*.service @Mosei1984
