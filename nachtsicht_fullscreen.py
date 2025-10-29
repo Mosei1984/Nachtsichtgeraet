@@ -422,7 +422,7 @@ def handle_gestures():
     plus timing-Logik für short/long/double/superlong.
     Prüft auch Terminal-Button Touch und Terminal-Tastatur.
     """
-    global state, click_pending, last_tap_time
+    global state, click_pending, last_tap_time, usb_manager_active
 
     ups = read_touch_events()
     now = time.time()
@@ -432,7 +432,6 @@ def handle_gestures():
         action, msg = usb_manager.handle_touch(norm_x * fb_w, norm_y * fb_h)
         if action == "close":
             print("[USB] Manager geschlossen")
-            global usb_manager_active
             usb_manager_active = False
         elif action == "unmount":
             print(f"[USB] {msg}")
@@ -468,7 +467,6 @@ def handle_gestures():
                 if (usb_btn_x <= norm_x * fb_w <= usb_btn_x + usb_btn_size and
                     usb_btn_y <= norm_y * fb_h <= usb_btn_y + usb_btn_size):
                     print("[TOUCH] USB-Manager aktiviert")
-                    global usb_manager_active
                     usb_manager_active = True
                     return
 
