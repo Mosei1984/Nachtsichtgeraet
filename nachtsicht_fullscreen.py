@@ -429,7 +429,7 @@ def handle_gestures():
 
     # USB-Manager-Modus: Alle Touches an Manager weiterleiten
     if usb_manager_active and usb_manager and ups:
-        action, msg = usb_manager.handle_touch(norm_x * fb_w, norm_y * fb_h)
+        action, msg = usb_manager.handle_touch(norm_x, norm_y)
         if action == "close":
             print("[USB] Manager geschlossen")
             usb_manager_active = False
@@ -465,11 +465,9 @@ def handle_gestures():
                 usb_btn_y = 5
                 usb_btn_w = 45
                 usb_btn_h = 40
-                touch_x = norm_x * fb_w
-                touch_y = norm_y * fb_h
-                print(f"[TOUCH-DEBUG] x={touch_x:.0f}, y={touch_y:.0f}, USB-area: {usb_btn_x}-{usb_btn_x+usb_btn_w}, {usb_btn_y}-{usb_btn_y+usb_btn_h}")
-                if (usb_btn_x <= touch_x <= usb_btn_x + usb_btn_w and
-                    usb_btn_y <= touch_y <= usb_btn_y + usb_btn_h):
+                print(f"[TOUCH-DEBUG] x={norm_x:.0f}, y={norm_y:.0f}, USB-area: {usb_btn_x}-{usb_btn_x+usb_btn_w}, {usb_btn_y}-{usb_btn_y+usb_btn_h}")
+                if (usb_btn_x <= norm_x <= usb_btn_x + usb_btn_w and
+                    usb_btn_y <= norm_y <= usb_btn_y + usb_btn_h):
                     print("[TOUCH] USB-Manager aktiviert")
                     usb_manager_active = True
                     return
