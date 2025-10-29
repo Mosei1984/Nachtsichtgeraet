@@ -116,13 +116,13 @@ class TerminalLauncher:
         if not self.terminal_active or not self.keyboard:
             return False
         
-        # Y-Koordinaten-Korrektur für Tastatur
-        # Gemessener Offset: Touch kommt 82px zu hoch an
-        # (Zeile 1 @ y=194 wird als y=276 empfangen)
-        adjusted_y = y - 82
+        # Touch-Koordinaten-Korrektur für Tastatur (aus Kalibrierung)
+        # Gemessener Offset: X=-82px, Y=+85px
+        adjusted_x = x + 82  # Touch kommt 82px zu weit links
+        adjusted_y = y - 85  # Touch kommt 85px zu weit unten
         
-        # Hit-Test auf Tastatur mit korrigiertem Y
-        key = self.keyboard.hit_test(x, adjusted_y)
+        # Hit-Test auf Tastatur mit korrigierten Koordinaten
+        key = self.keyboard.hit_test(adjusted_x, adjusted_y)
         
         if key:
             # Taste verarbeiten
