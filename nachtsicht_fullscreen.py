@@ -318,14 +318,14 @@ def read_touch_events():
             elif code == ABS_Y:
                 cur_y = value
                 
-            # Touch-Kalibrierung für LCD35-show
+            # Touch-Kalibrierung basierend auf gemessenen Daten
             # Achsen tauschen: raw_y->display_x, raw_x->display_y
-            # Display: 480x320, Touch: 0-4095
-            # Skalierung: X auf 0-479, Y auf 0-319
-            temp_x = int(cur_y * 479 / 4095)  # Raw-Y -> X-Achse (0-479)
-            temp_y = int(cur_x * 319 / 4095)  # Raw-X -> Y-Achse (0-319)
-            norm_x = 479 - temp_x  # X spiegeln
-            norm_y = temp_y        # Y nicht spiegeln
+            # Y-Achse: raw_x=2251→y=194, raw_x=3385→y=306
+            # X-Achse: komprimiert 52-271 → gestreckt 40-440
+            temp_x = int(cur_y * 479 / 4095)
+            temp_x_flipped = 479 - temp_x
+            norm_x = int(1.826 * temp_x_flipped - 55)
+            norm_y = int((cur_x - 286) * 194.0 / 1965.0)
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
