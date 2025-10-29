@@ -77,8 +77,10 @@ def ensure_dirs():
         pdir = os.path.join(usb, "Nachtsicht_Fotos")
         vdir = os.path.join(usb, "Nachtsicht_Videos")
     else:
-        pdir = "/home/pi/Nachtsicht_Fotos"
-        vdir = "/home/pi/Nachtsicht_Videos"
+        # Verwende HOME-Verzeichnis des aktuellen Users
+        home = os.path.expanduser("~")
+        pdir = os.path.join(home, "Nachtsicht_Fotos")
+        vdir = os.path.join(home, "Nachtsicht_Videos")
     os.makedirs(pdir, exist_ok=True)
     os.makedirs(vdir, exist_ok=True)
     return pdir, vdir
@@ -110,7 +112,7 @@ def next_video():
     return os.path.join(vdir, f"Nachtsicht_Video{n+1}.h264")
 
 def free_bytes_path():
-    path = usb_mountpoint() or "/home/pi"
+    path = usb_mountpoint() or os.path.expanduser("~")
     st2 = shutil.disk_usage(path)
     return st2.free
 
