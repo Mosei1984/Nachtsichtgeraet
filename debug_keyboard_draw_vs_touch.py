@@ -104,17 +104,9 @@ def draw_keyboard_outline():
     
     return frame
 
-def read_touch():
+def read_touch(fd):
     """Liest Touch-Events"""
     global cur_x, cur_y, norm_x, norm_y, finger_down
-    
-    if not os.path.exists(TOUCH_DEV):
-        return None
-        
-    try:
-        fd = os.open(TOUCH_DEV, os.O_RDONLY | os.O_NONBLOCK)
-    except:
-        return None
     
     events = []
     
@@ -146,7 +138,6 @@ def read_touch():
         except:
             break
     
-    os.close(fd)
     return events
 
 def main():
@@ -157,6 +148,14 @@ def main():
     print("und wo TOUCH ankommt (grün)")
     print("\nTippe auf verschiedene Tasten!")
     print("Strg+C zum Beenden\n")
+    
+    # Touch-Device öffnen
+    try:
+        touch_fd = os.open(TOUCH_DEV, os.O_RDONLY | os.O_NONBLOCK)
+        print(f"✓ {TOUCH_DEV} geöffnet")
+    except Exception as e:
+        print(f"✗ Touch-Fehler: {e}")
+        return
     
     # Framebuffer öffnen
     try:
@@ -172,7 +171,7 @@ def main():
     try:
         while True:
             # Touch lesen
-            events = read_touch()
+            events = read_touch(touch_fd)
             if events:
                 for event in events:
                     if event[0] == 'up':
@@ -203,6 +202,7 @@ def main():
                 print(f"  Touch: ({tx:3d}, {ty:3d}) <- Raw: ({raw_x:4d}, {raw_y:4d})")
                 
     finally:
+        os.close(touch_fd)
         fb_mem.close()
         os.close(fb_fd)
 
