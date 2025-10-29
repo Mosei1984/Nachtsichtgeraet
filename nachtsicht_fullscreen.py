@@ -403,7 +403,7 @@ def read_touch_events():
             # X-Offset: 15px nach links (Tastatur war zu weit rechts)
             norm_x = int(1.826 * temp_x_flipped - 55) 
             # Y-Offset: 50px nach oben (Buttons waren zu tief)
-            norm_y = int((cur_x - 286) * 194.0 / 1965.0) + 50
+            norm_y = int((cur_x - 286) * 194.0 / 1965.0) + 80
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
