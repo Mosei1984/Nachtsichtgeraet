@@ -37,6 +37,7 @@ from picamera2.outputs import FileOutput
 try:
     from terminal_access.terminal_launcher import TerminalLauncher
     from terminal_access.touch_button import TerminalButton
+    from terminal_access.usb_manager import USBManager
     TERMINAL_AVAILABLE = True
 except ImportError:
     TERMINAL_AVAILABLE = False
@@ -62,10 +63,20 @@ FBIOGET_VSCREENINFO = 0x4600
 
 _usb_cache = None
 _usb_cache_time = 0
+_usb_last_check = 0  # Für häufigere Hot-Unplug-Checks
 
 def usb_mountpoint():
-    global _usb_cache, _usb_cache_time
+    global _usb_cache, _usb_cache_time, _usb_last_check
     now = time.time()
+    
+    # Häufige Checks (alle 2s) ob noch gemountet, auch wenn Cache gültig
+    if _usb_cache is not None and (now - _usb_last_check) > 2.0:
+        if not os.path.ismount(_usb_cache):
+            print(f"[USB] Hot-Unplug erkannt: {_usb_cache} nicht mehr gemountet")
+            _usb_cache = None
+            _usb_cache_time = 0
+        _usb_last_check = now
+    
     # Cache nur verwenden wenn Mountpoint noch existiert UND gemountet ist
     if _usb_cache is not None and (now - _usb_cache_time) < 5.0:
         if os.path.ismount(_usb_cache):
@@ -341,6 +352,10 @@ last_tap_time = 0.0
 
 terminal_launcher = None
 terminal_button = None
+usb_manager_active = False
+usb_manager = None
+fb_w = 480  # Wird in main() gesetzt
+fb_h = 320  # Wird in main() gesetzt
 
 def open_touch():
     global touch_fd
@@ -412,6 +427,20 @@ def handle_gestures():
     ups = read_touch_events()
     now = time.time()
 
+    # USB-Manager-Modus: Alle Touches an Manager weiterleiten
+    if usb_manager_active and usb_manager and ups:
+        action, msg = usb_manager.handle_touch(norm_x * fb_w, norm_y * fb_h)
+        if action == "close":
+            print("[USB] Manager geschlossen")
+            global usb_manager_active
+            usb_manager_active = False
+        elif action == "unmount":
+            print(f"[USB] {msg}")
+            # Nach Unmount noch kurz anzeigen, dann schließen
+            time.sleep(1.5)
+            usb_manager_active = False
+        return
+    
     # Terminal-Modus: Alle Touches an Tastatur weiterleiten
     if TERMINAL_AVAILABLE and terminal_launcher and terminal_launcher.is_active():
         if ups:
@@ -422,14 +451,25 @@ def handle_gestures():
                 terminal_launcher.toggle_terminal()
         return
 
-    # Terminal-Button prüfen (nur bei kurzen Taps und wenn verfügbar)
-    if TERMINAL_AVAILABLE and terminal_button and ups:
+    # Terminal/USB-Buttons prüfen (nur bei kurzen Taps)
+    if TERMINAL_AVAILABLE and ups:
         for press_len in ups:
             if press_len < SHORT_LONG:
-                if terminal_button.is_touched(norm_x, norm_y):
+                # Terminal-Button (links oben)
+                if terminal_button and terminal_button.is_touched(norm_x, norm_y):
                     print("[TOUCH] Terminal-Button aktiviert")
                     if terminal_launcher:
                         terminal_launcher.toggle_terminal()
+                    return
+                # USB-Button (rechts oben, neben Terminal)
+                usb_btn_x = 440
+                usb_btn_y = 10
+                usb_btn_size = 30
+                if (usb_btn_x <= norm_x * fb_w <= usb_btn_x + usb_btn_size and
+                    usb_btn_y <= norm_y * fb_h <= usb_btn_y + usb_btn_size):
+                    print("[TOUCH] USB-Manager aktiviert")
+                    global usb_manager_active
+                    usb_manager_active = True
                     return
 
     # Long-hold auswerten (wenn Finger weiterhin down ist)
@@ -496,18 +536,30 @@ def main():
     picam.start()
     open_touch()
 
+    global fb_w, fb_h
     fbfd, fbmem, W, H, BPP = open_fb(FB_PATH)
+    fb_w, fb_h = W, H
     
     if TERMINAL_AVAILABLE:
         terminal_launcher = TerminalLauncher(FB_PATH, TOUCH_DEV)
         terminal_button = TerminalButton(x=10, y=H-40, width=70, height=30)
-        print("[TERMINAL] Terminal Access aktiviert")
+        global usb_manager
+        usb_manager = USBManager(fb_width=W, fb_height=H)
+        print("[TERMINAL] Terminal Access & USB Manager aktiviert")
 
     try:
         while True:
             # Touch-Logik (z.B. Start/Stop Video, Foto, Shutdown)
             handle_gestures()
 
+            # USB-Manager-Modus: USB-Interface rendern
+            if usb_manager_active and usb_manager:
+                disp = np.zeros((H, W, 3), dtype=np.uint8)
+                usb_manager.draw_interface(disp)
+                fb_draw(disp, fbmem, W, H)
+                time.sleep(0.05)
+                continue
+            
             # Terminal-Modus: Terminal und Tastatur rendern
             if TERMINAL_AVAILABLE and terminal_launcher and terminal_launcher.is_active():
                 # Terminal-Update (liest Shell-Output)
@@ -552,6 +604,13 @@ def main():
             # Terminal-Button zeichnen (nur wenn Terminal nicht aktiv)
             if TERMINAL_AVAILABLE and terminal_button:
                 terminal_button.draw(disp)
+            
+            # USB-Button zeichnen (rechts oben)
+            if TERMINAL_AVAILABLE:
+                usb_color = (100, 255, 100) if usb_mountpoint() else (150, 150, 150)
+                cv2.rectangle(disp, (440, 10), (470, 40), usb_color, 2)
+                cv2.putText(disp, "USB", (443, 32), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, usb_color, 1, cv2.LINE_AA)
 
             # zum Display pushen
             fb_draw(disp, fbmem, W, H)

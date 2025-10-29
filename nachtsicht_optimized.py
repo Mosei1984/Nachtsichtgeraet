@@ -38,10 +38,20 @@ FBIOGET_VSCREENINFO = 0x4600
 
 _usb_cache = None
 _usb_cache_time = 0
+_usb_last_check = 0  # Für häufigere Hot-Unplug-Checks
 
 def usb_mountpoint():
-    global _usb_cache, _usb_cache_time
+    global _usb_cache, _usb_cache_time, _usb_last_check
     now = time.time()
+    
+    # Häufige Checks (alle 2s) ob noch gemountet, auch wenn Cache gültig
+    if _usb_cache is not None and (now - _usb_last_check) > 2.0:
+        if not os.path.ismount(_usb_cache):
+            print(f"[USB] Hot-Unplug erkannt: {_usb_cache} nicht mehr gemountet")
+            _usb_cache = None
+            _usb_cache_time = 0
+        _usb_last_check = now
+    
     # Cache nur verwenden wenn Mountpoint noch existiert UND gemountet ist
     if _usb_cache is not None and (now - _usb_cache_time) < 5.0:
         if os.path.ismount(_usb_cache):
