@@ -260,6 +260,8 @@ BTN_TOUCH = 0x14a  # oft 330 dezimal
 
 cur_x = 0
 cur_y = 0
+norm_x = 0  # Normalisierte Display-Koordinaten (0-480)
+norm_y = 0  # Normalisierte Display-Koordinaten (0-320)
 finger_down = False
 down_time = 0.0
 
@@ -283,7 +285,7 @@ def read_touch_events():
     Liest alle pending Events und aktualisiert cur_x, cur_y und Finger-Zustand.
     Gibt eine Liste von "touch_up" Events zurück, jede mit (press_dauer_sek).
     """
-    global cur_x, cur_y, finger_down, down_time
+    global cur_x, cur_y, norm_x, norm_y, finger_down, down_time
     ups = []
 
     if touch_fd is None:
@@ -304,8 +306,10 @@ def read_touch_events():
         if etype == 0x03:  # EV_ABS
             if code == ABS_X:
                 cur_x = value
+                norm_x = int(cur_x * 480 / 4095)  # ADS7846: 0-4095 -> 0-480
             elif code == ABS_Y:
                 cur_y = value
+                norm_y = int(cur_y * 320 / 4095)  # ADS7846: 0-4095 -> 0-320
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
@@ -334,7 +338,7 @@ def handle_gestures():
     if TERMINAL_AVAILABLE and terminal_launcher and terminal_launcher.is_active():
         if ups:
             # Nur bei Touch-Up (Finger losgelassen)
-            exit_requested = terminal_launcher.handle_touch(cur_x, cur_y)
+            exit_requested = terminal_launcher.handle_touch(norm_x, norm_y)
             if exit_requested:
                 print("[TERMINAL] EXIT-Taste gedrückt")
                 terminal_launcher.toggle_terminal()
@@ -344,7 +348,8 @@ def handle_gestures():
     if TERMINAL_AVAILABLE and terminal_button and ups:
         for press_len in ups:
             if press_len < SHORT_LONG:
-                if terminal_button.is_touched(cur_x, cur_y):
+                print(f"[DEBUG] Terminal-Button check: norm_x={norm_x}, norm_y={norm_y}")
+                if terminal_button.is_touched(norm_x, norm_y):
                     print("[TOUCH] Terminal-Button aktiviert")
                     if terminal_launcher:
                         terminal_launcher.toggle_terminal()
