@@ -25,20 +25,19 @@ while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
 done
 
 echo ""
-echo "[2/4] Framebuffer Terminal (fbterm) installieren..."
-apt-get install -y fbterm
+echo "[2/4] Python3-Pakete installieren..."
+apt-get install -y python3-pip
 
 echo ""
-echo "[3/4] User zu video Gruppe hinzufügen..."
-# fbterm braucht Zugriff auf Framebuffer
+echo "[3/4] pyte Terminal Emulator Library installieren..."
+pip3 install pyte
+echo "pyte installiert"
+
+echo ""
+echo "[4/4] User zu video Gruppe hinzufügen..."
+# Framebuffer-Zugriff
 usermod -a -G video $SUDO_USER 2>/dev/null || usermod -a -G video pi
 echo "User zur video Gruppe hinzugefügt"
-
-echo ""
-echo "[4/4] fbterm Berechtigungen setzen..."
-# fbterm braucht setuid für direkten Framebuffer-Zugriff
-chmod u+s /usr/bin/fbterm 2>/dev/null || true
-echo "Berechtigungen gesetzt"
 
 echo ""
 echo "======================================"
@@ -50,16 +49,19 @@ echo "  sudo reboot"
 echo ""
 echo "Verwendung:"
 echo "  - Terminal-Button im Nachtsicht-Interface antippen"
-echo "  - fbterm öffnet sich auf /dev/fb1"
-echo "  - Bedienung mit externer USB-Tastatur"
-echo "  - Oder via SSH für Eingaben"
+echo "  - Integriertes Terminal öffnet sich als Overlay"
+echo "  - Virtuelle Tastatur am unteren Bildschirmrand"
+echo "  - EXIT-Taste auf Tastatur zum Schließen"
 echo ""
 echo "Konfiguration:"
-echo "  - Display: /dev/fb1 (SPI)"
-echo "  - Terminal: fbterm (Framebuffer-basiert)"
+echo "  - Display: /dev/fb1 (480x320 SPI)"
+echo "  - Terminal: 480x180 (20 Zeilen x 60 Spalten)"
+echo "  - Tastatur: 480x140 (virtuelle On-Screen-Tastatur)"
 echo ""
-echo "Hinweis:"
-echo "  fbterm läuft direkt auf Framebuffer (kein X11 nötig)"
-echo "  Für Eingaben externe USB-Tastatur verwenden"
-echo "  Oder via SSH verbinden: ssh valentin@NigthCam.local"
+echo "Features:"
+echo "  - Vollständiges QWERTY-Layout"
+echo "  - Shift/Ctrl/Alt/Symbols Tasten"
+echo "  - Pfeiltasten, ESC, Tab, Enter, Backspace"
+echo "  - PTY-basiertes Terminal (bash)"
+echo "  - VT100-Emulation mit pyte"
 echo ""

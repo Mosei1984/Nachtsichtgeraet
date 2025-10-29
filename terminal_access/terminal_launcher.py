@@ -2,171 +2,174 @@
 """
 Terminal Access Launcher für Nachtsichtgerät
 Ermöglicht Touchscreen-basierte Terminal- und Tastatur-Zugriffe
+Integrierte virtuelle Tastatur und Terminal-Emulator
 """
 
 import subprocess
 import os
 import signal
 import logging
+import time
+
+try:
+    from .terminal_emulator import TerminalEmulator
+    from .vkeyboard import VirtualKeyboard
+    TERMINAL_EMU_AVAILABLE = True
+except ImportError:
+    TERMINAL_EMU_AVAILABLE = False
+    print("[WARN] Terminal Emulator/VKeyboard nicht verfügbar")
 
 logger = logging.getLogger(__name__)
 
 FB_DEVICE = "/dev/fb1"
 TOUCH_DEVICE = "/dev/input/event0"
 
-# fbterm läuft direkt auf Framebuffer (kein X11 nötig)
-TERMINAL_CMD = "fbterm"
-# onboard läuft mit Wayland/X11, brauchen wir vorerst nicht
-KEYBOARD_CMD = None  # Erstmal ohne virtuelle Tastatur
-
 class TerminalLauncher:
-    """Verwaltet Terminal und virtuelle Tastatur Prozesse"""
+    """Verwaltet integriertes Terminal mit virtueller Tastatur"""
     
     def __init__(self, fb_device=FB_DEVICE, touch_device=TOUCH_DEVICE):
         self.fb_device = fb_device
         self.touch_device = touch_device
-        self.terminal_process = None
-        self.keyboard_process = None
         self.terminal_active = False
         
+        # Integrierte Terminal-Komponenten
+        self.terminal = None
+        self.keyboard = None
+        
+        # Legacy external terminal support
+        self.terminal_process = None
+        self.keyboard_process = None
+        
     def launch_terminal(self):
-        """Startet Terminal Emulator auf SPI Display"""
-        if self.terminal_active and self.terminal_process:
+        """Startet integriertes Terminal mit virtueller Tastatur"""
+        if self.terminal_active:
             logger.info("Terminal bereits aktiv")
             return True
             
-        try:
-            env = os.environ.copy()
-            env['FRAMEBUFFER'] = self.fb_device
+        if not TERMINAL_EMU_AVAILABLE:
+            print("[TERMINAL] Terminal Emulator nicht verfügbar")
+            print("[TERMINAL] Installation: pip3 install pyte")
+            return False
             
-            # fbterm Optionen:
-            # -s 0 = Font size 0 (klein, passt mehr auf Display)
-            # --vt-switch = Erlaubt VT switching
-            self.terminal_process = subprocess.Popen(
-                [TERMINAL_CMD, '-s', '0'],
-                env=env,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+        try:
+            # Terminal-Emulator initialisieren (480x180 für Display-Bereich)
+            self.terminal = TerminalEmulator(width=480, height=180, cols=60, rows=20)
+            self.terminal.start(shell="/bin/bash")
+            
+            # Virtuelle Tastatur initialisieren (480x140, startet bei Y=180)
+            self.keyboard = VirtualKeyboard(width=480, height=140, y_offset=180)
+            
             self.terminal_active = True
-            print(f"[TERMINAL] fbterm gestartet (PID: {self.terminal_process.pid})")
-            print(f"[TERMINAL] Tippe nochmal auf TERM-Button zum Beenden")
-            logger.info("Terminal erfolgreich gestartet")
+            print("[TERMINAL] Integriertes Terminal gestartet")
+            print("[TERMINAL] Terminal: 480x180 (20 Zeilen)")
+            print("[TERMINAL] Tastatur: 480x140")
+            logger.info("Integriertes Terminal erfolgreich gestartet")
             return True
             
-        except FileNotFoundError:
-            print(f"[TERMINAL] FEHLER: {TERMINAL_CMD} nicht gefunden")
-            print(f"[TERMINAL] Installation: sudo apt-get install fbterm")
-            logger.error(f"{TERMINAL_CMD} nicht gefunden. Installation: sudo apt-get install fbterm")
-            return False
         except Exception as e:
             print(f"[TERMINAL] FEHLER: {e}")
             logger.error(f"Fehler beim Starten des Terminals: {e}")
             return False
             
-    def launch_keyboard(self):
-        """Startet virtuelle Tastatur (aktuell deaktiviert für fbterm)"""
-        # fbterm hat keine virtuelle Tastatur - Nutzung mit externer Tastatur
-        # oder SSH empfohlen
-        if KEYBOARD_CMD is None:
-            logger.info("Virtuelle Tastatur nicht verfügbar für fbterm")
+    def update(self):
+        """
+        Update-Loop für Terminal (liest Output, prüft Status)
+        Sollte regelmäßig aufgerufen werden wenn Terminal aktiv
+        """
+        if not self.terminal_active or not self.terminal:
+            return
+            
+        # Terminal-Output lesen und Screen-Buffer aktualisieren
+        self.terminal.read()
+        
+        # Prüfen ob Shell noch läuft
+        if not self.terminal.is_alive():
+            print("[TERMINAL] Shell beendet - schließe Terminal")
+            self.close_terminal()
+            
+    def render(self, frame):
+        """
+        Rendert Terminal und Tastatur auf Frame
+        
+        Args:
+            frame: BGR numpy array (480x320x3)
+        """
+        if not self.terminal_active:
+            return
+            
+        if self.terminal:
+            self.terminal.render(frame, x_offset=0, y_offset=0)
+            
+        if self.keyboard:
+            self.keyboard.draw(frame)
+            
+    def handle_touch(self, x, y):
+        """
+        Verarbeitet Touch-Event für Tastatur
+        
+        Args:
+            x, y: Touch-Koordinaten (normalisiert)
+            
+        Returns:
+            True wenn Exit angefordert, sonst False
+        """
+        if not self.terminal_active or not self.keyboard:
             return False
             
-        if self.keyboard_process and self.keyboard_process.poll() is None:
-            logger.info("Tastatur bereits aktiv")
-            return True
+        # Hit-Test auf Tastatur
+        key = self.keyboard.hit_test(x, y)
+        
+        if key:
+            # Taste verarbeiten
+            key_bytes, exit_requested = self.keyboard.process_key(key)
             
-        try:
-            env = os.environ.copy()
-            env['FRAMEBUFFER'] = self.fb_device
-            env['TSLIB_TSDEVICE'] = self.touch_device
-            env['DISPLAY'] = ':0'
-            
-            self.keyboard_process = subprocess.Popen(
-                [KEYBOARD_CMD],
-                env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            logger.info("Virtuelle Tastatur gestartet")
-            return True
-            
-        except FileNotFoundError:
-            logger.error(f"{KEYBOARD_CMD} nicht gefunden. Installation: sudo apt-get install matchbox-keyboard")
-            return False
-        except Exception as e:
-            logger.error(f"Fehler beim Starten der Tastatur: {e}")
-            return False
+            if exit_requested:
+                return True
+                
+            # Bytes zum Terminal senden
+            if key_bytes and self.terminal:
+                self.terminal.write(key_bytes)
+                
+        return False
             
     def close_terminal(self):
-        """Schließt Terminal Emulator"""
-        if self.terminal_process:
+        """Schließt integriertes Terminal"""
+        if self.terminal:
             try:
-                self.terminal_process.terminate()
-                self.terminal_process.wait(timeout=3)
+                self.terminal.stop()
                 logger.info("Terminal geschlossen")
-            except subprocess.TimeoutExpired:
-                self.terminal_process.kill()
-                logger.warning("Terminal musste forciert beendet werden")
             except Exception as e:
                 logger.error(f"Fehler beim Schließen des Terminals: {e}")
             finally:
-                self.terminal_process = None
+                self.terminal = None
+                self.keyboard = None
                 self.terminal_active = False
-                
-    def close_keyboard(self):
-        """Schließt virtuelle Tastatur"""
-        if self.keyboard_process:
-            try:
-                self.keyboard_process.terminate()
-                self.keyboard_process.wait(timeout=3)
-                logger.info("Tastatur geschlossen")
-            except subprocess.TimeoutExpired:
-                self.keyboard_process.kill()
-                logger.warning("Tastatur musste forciert beendet werden")
-            except Exception as e:
-                logger.error(f"Fehler beim Schließen der Tastatur: {e}")
-            finally:
-                self.keyboard_process = None
                 
     def toggle_terminal(self):
         """Terminal ein/ausschalten"""
         if self.terminal_active:
             self.close_terminal()
-            self.close_keyboard()
             return False
         else:
-            success = self.launch_terminal()
-            if success:
-                self.launch_keyboard()
-            return success
+            return self.launch_terminal()
+            
+    def is_active(self):
+        """Gibt zurück ob Terminal aktiv ist"""
+        return self.terminal_active
             
     def cleanup(self):
         """Beendet alle Prozesse"""
         self.close_terminal()
-        self.close_keyboard()
         logger.info("Terminal Launcher aufgeräumt")
 
 
 def check_dependencies():
-    """Prüft ob benötigte Programme installiert sind"""
+    """Prüft ob benötigte Python-Module installiert sind"""
     missing = []
     
     try:
-        subprocess.run(['which', TERMINAL_CMD], 
-                      check=True, 
-                      stdout=subprocess.DEVNULL, 
-                      stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        missing.append(f"{TERMINAL_CMD} (sudo apt-get install lxterminal)")
-        
-    try:
-        subprocess.run(['which', KEYBOARD_CMD], 
-                      check=True, 
-                      stdout=subprocess.DEVNULL, 
-                      stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        missing.append(f"{KEYBOARD_CMD} (sudo apt-get install matchbox-keyboard)")
+        import pyte
+    except ImportError:
+        missing.append("pyte (pip3 install pyte)")
         
     return missing

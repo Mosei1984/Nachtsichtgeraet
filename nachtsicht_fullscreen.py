@@ -323,12 +323,22 @@ def handle_gestures():
     """
     Nutzt die "ups" Events (Finger losgelassen),
     plus timing-Logik für short/long/double/superlong.
-    Prüft auch Terminal-Button Touch.
+    Prüft auch Terminal-Button Touch und Terminal-Tastatur.
     """
     global state, click_pending, last_tap_time
 
     ups = read_touch_events()
     now = time.time()
+
+    # Terminal-Modus: Alle Touches an Tastatur weiterleiten
+    if TERMINAL_AVAILABLE and terminal_launcher and terminal_launcher.is_active():
+        if ups:
+            # Nur bei Touch-Up (Finger losgelassen)
+            exit_requested = terminal_launcher.handle_touch(cur_x, cur_y)
+            if exit_requested:
+                print("[TERMINAL] EXIT-Taste gedrückt")
+                terminal_launcher.toggle_terminal()
+        return
 
     # Terminal-Button prüfen (nur bei kurzen Taps und wenn verfügbar)
     if TERMINAL_AVAILABLE and terminal_button and ups:
@@ -416,6 +426,22 @@ def main():
             # Touch-Logik (z.B. Start/Stop Video, Foto, Shutdown)
             handle_gestures()
 
+            # Terminal-Modus: Terminal und Tastatur rendern
+            if TERMINAL_AVAILABLE and terminal_launcher and terminal_launcher.is_active():
+                # Terminal-Update (liest Shell-Output)
+                terminal_launcher.update()
+                
+                # Schwarzer Hintergrund für Terminal
+                disp = np.zeros((H, W, 3), dtype=np.uint8)
+                
+                # Terminal und Tastatur rendern
+                terminal_launcher.render(disp)
+                
+                # zum Display pushen
+                fb_draw(disp, fbmem, W, H)
+                time.sleep(0.01)
+                continue
+
             # Kameraframe holen
             frame = picam.capture_array()
 
@@ -441,7 +467,7 @@ def main():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2, cv2.LINE_AA
                 )
             
-            # Terminal-Button zeichnen
+            # Terminal-Button zeichnen (nur wenn Terminal nicht aktiv)
             if TERMINAL_AVAILABLE and terminal_button:
                 terminal_button.draw(disp)
 

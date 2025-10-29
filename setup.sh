@@ -120,13 +120,13 @@ echo "  ✓ Service aktiviert (startet automatisch beim Boot)"
 # 8. Terminal Access Setup anbieten
 echo "[8/8] Terminal Access (optional)..."
 if [ -d "/opt/nachtsicht/terminal_access" ]; then
-    read -p "Terminal-Zugriff installieren? (lxterminal + Tastatur) (j/N): " term_choice
+    read -p "Terminal-Zugriff installieren? (Virtuelle Tastatur + Terminal) (j/N): " term_choice
     case "$term_choice" in 
       j|J|y|Y ) 
         cd /opt/nachtsicht/terminal_access
         bash setup_terminal.sh
         cd "$SCRIPT_DIR"
-        echo "  ✓ Terminal Access installiert"
+        echo "  ✓ Terminal Access installiert (Virtuelle Tastatur + PTY Terminal)"
         ;;
       * ) 
         echo "  ⊙ Übersprungen (später: cd /opt/nachtsicht/terminal_access && sudo bash setup_terminal.sh)"
