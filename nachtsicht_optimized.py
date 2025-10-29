@@ -45,26 +45,51 @@ def usb_mountpoint():
     if _usb_cache is not None and (now - _usb_cache_time) < 5.0:
         return _usb_cache
     
-    base = "/media"
+    # Mehrere mögliche Base-Pfade für verschiedene Raspbian-Versionen
+    base_paths = [
+        "/media/valentin",  # User valentin
+        "/media/pi",        # Ältere Raspbian-Versionen
+        "/media"            # Fallback für allgemeine Struktur
+    ]
+    
     _usb_cache = None
-    if os.path.isdir(base):
+    
+    for base in base_paths:
+        print(f"[USB] Suche in {base}")
+        if not os.path.isdir(base):
+            continue
+        
         for e in os.scandir(base):
             if e.is_dir() and e.name.startswith("usb"):
-                _usb_cache = e.path
-                break
+                print(f"[USB] Gefunden: {e.path}")
+                # Prüfe ob tatsächlich als Mountpoint gemountet
+                if os.path.ismount(e.path):
+                    _usb_cache = e.path
+                    print(f"[USB] Mountpoint: {_usb_cache}")
+                    _usb_cache_time = now
+                    return _usb_cache
+                else:
+                    print(f"[USB] {e.path} ist kein Mountpoint")
+    
+    print(f"[USB] Mountpoint: {_usb_cache}")
     _usb_cache_time = now
     return _usb_cache
 
 def ensure_dirs():
     usb = usb_mountpoint()
+    print(f"[USB] Result: {usb}")
     if usb:
         pdir = os.path.join(usb, "Nachtsicht_Fotos")
         vdir = os.path.join(usb, "Nachtsicht_Videos")
     else:
-        pdir = "/home/pi/Nachtsicht_Fotos"
-        vdir = "/home/pi/Nachtsicht_Videos"
+        # Verwende HOME-Verzeichnis des aktuellen Users
+        home = os.path.expanduser("~")
+        pdir = os.path.join(home, "Nachtsicht_Fotos")
+        vdir = os.path.join(home, "Nachtsicht_Videos")
     os.makedirs(pdir, exist_ok=True)
     os.makedirs(vdir, exist_ok=True)
+    print(f"[DIRS] Fotos: {pdir}")
+    print(f"[DIRS] Videos: {vdir}")
     return pdir, vdir
 
 def next_photo():
