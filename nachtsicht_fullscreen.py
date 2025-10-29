@@ -552,6 +552,7 @@ def main():
 
             # USB-Manager-Modus: USB-Interface rendern
             if usb_manager_active and usb_manager:
+                print("[MAIN] USB-Manager aktiv, rendering...")
                 disp = np.zeros((H, W, 3), dtype=np.uint8)
                 usb_manager.draw_interface(disp)
                 fb_draw(disp, fbmem, W, H)

@@ -69,6 +69,8 @@ class USBManager:
         import cv2
         import numpy as np
         
+        print(f"[USB-MGR] draw_interface called, frame shape: {frame.shape}")
+        
         # Hintergrund: Schwarz
         frame.fill(0)
         
@@ -78,6 +80,7 @@ class USBManager:
         
         # Status-Text
         status_text, status_color = self.get_status_text()
+        print(f"[USB-MGR] Status: {status_text}, mounted={self.is_mounted()}")
         cv2.putText(frame, status_text, (self.margin, 90),
                    cv2.FONT_HERSHEY_SIMPLEX, self.font_scale, status_color, 2)
         
@@ -90,11 +93,16 @@ class USBManager:
         y_pos = 180
         
         # Unmount-Button (nur wenn gemountet)
-        if self.is_mounted():
+        is_mounted = self.is_mounted()
+        print(f"[USB-MGR] Drawing buttons, is_mounted={is_mounted}")
+        if is_mounted:
+            print(f"[USB-MGR] Drawing unmount button at y={y_pos}")
             self._draw_button(frame, "Sicher Entfernen", (self.margin, y_pos),
                             (self.width - 2*self.margin, self.button_height),
                             (100, 200, 100), "unmount")
             y_pos += self.button_height + 10
+        else:
+            print(f"[USB-MGR] USB not mounted, skipping unmount button")
         
         # Schließen-Button
         self._draw_button(frame, "Schliessen (ESC)", (self.margin, self.height - self.button_height - self.margin),
