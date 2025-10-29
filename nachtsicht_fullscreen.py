@@ -259,11 +259,7 @@ def take_photo():
 
 def _stop_video_thread(rec_file, out_handle):
     global _stopping_video
-    try:
-        picam.stop_recording()
-    except Exception as e:
-        print(f"[VIDEO] ERROR stop_recording: {e}")
-    
+    # NUR File-Close im Thread - stop_recording ist schon passiert!
     if out_handle:
         try:
             out_handle.close()
@@ -288,11 +284,15 @@ def stop_video():
     if state == "recording":
         print("[VIDEO] STOP")
         state = "live"
-        _stopping_video = True  # Flag SOFORT setzen
         
-        # Kurze Pause damit Main-Loop das Flag sieht
-        time.sleep(0.05)
+        # stop_recording() SOFORT im Main-Thread (schnell, nicht blockierend)
+        try:
+            picam.stop_recording()
+        except Exception as e:
+            print(f"[VIDEO] ERROR stop_recording: {e}")
         
+        # Nur File-Close im Worker-Thread (kann langsam sein)
+        _stopping_video = True
         worker = threading.Thread(target=_stop_video_thread, args=(rec_name, video_out))
         worker.daemon = True
         worker.start()
