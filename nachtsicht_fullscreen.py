@@ -318,11 +318,11 @@ def read_touch_events():
             elif code == ABS_Y:
                 cur_y = value
                 
-            # Touch-Kalibrierung für LCD35-show (Achsen tauschen + X spiegeln)
-            temp_x = int(cur_y * 320 / 4095)  # Y-Achse -> Display-Höhe
+            # Touch-Kalibrierung für LCD35-show (Achsen tauschen + beide spiegeln)
+            temp_x = int(cur_y * 320 / 4095)  # Y-Achse -> Display-Höhe  
             temp_y = int(cur_x * 480 / 4095)  # X-Achse -> Display-Breite
-            norm_x = 320 - temp_x  # X spiegeln
-            norm_y = temp_y
+            norm_x = 320 - temp_x  # X spiegeln (links/rechts)
+            norm_y = 480 - temp_y  # Y spiegeln (oben/unten)
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
@@ -361,7 +361,6 @@ def handle_gestures():
     if TERMINAL_AVAILABLE and terminal_button and ups:
         for press_len in ups:
             if press_len < SHORT_LONG:
-                print(f"[DEBUG] Terminal-Button check: norm_x={norm_x}, norm_y={norm_y}")
                 if terminal_button.is_touched(norm_x, norm_y):
                     print("[TOUCH] Terminal-Button aktiviert")
                     if terminal_launcher:

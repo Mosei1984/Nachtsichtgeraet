@@ -152,20 +152,14 @@ class VirtualKeyboard:
         Returns:
             Key-Label oder None
         """
-        print(f"[KEYBOARD] Touch @ ({x}, {y}), y_offset={self.y_offset}")
-        
+        # Touch-Hit-Testing
         for key_label, rect in self.key_rects.items():
             kx, ky, kw, kh = rect['x'], rect['y'], rect['w'], rect['h']
             if kx <= x < (kx + kw) and ky <= y < (ky + kh):
-                print(f"[KEYBOARD] HIT: '{key_label}' @ rect({kx},{ky},{kw}x{kh})")
+                # Debug nur für wichtige Tasten
+                if key_label in ['EXIT', 'ENTER']:
+                    print(f"[KEYBOARD] {key_label}")
                 return key_label
-        
-        print(f"[KEYBOARD] MISS - keine Taste getroffen")
-        # Debug: Zeige erste 3 Tasten
-        for i, (label, rect) in enumerate(list(self.key_rects.items())[:3]):
-            print(f"  Taste '{label}': ({rect['x']}, {rect['y']}) {rect['w']}x{rect['h']}")
-            if i >= 2:
-                break
         
         return None
         
