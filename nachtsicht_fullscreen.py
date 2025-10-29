@@ -61,6 +61,24 @@ FBIOGET_VSCREENINFO = 0x4600
 ############################
 
 def usb_mountpoint():
+    # Auto-Mount: Prüfe ob USB-Device existiert aber nicht gemountet
+    usb_dev = "/dev/sda1"
+    mount_target = "/media/usb"
+    
+    if os.path.exists(usb_dev) and not os.path.ismount(mount_target):
+        print(f"[USB] {usb_dev} gefunden aber nicht gemountet")
+        os.makedirs(mount_target, exist_ok=True)
+        try:
+            # Mount mit User-Rechten (uid/gid vom aktuellen User)
+            uid = os.getuid()
+            gid = os.getgid()
+            subprocess.run(["sudo", "mount", "-o", f"uid={uid},gid={gid},umask=000", 
+                          usb_dev, mount_target], check=True, timeout=5)
+            print(f"[USB] Auto-Mount erfolgreich: {mount_target}")
+            time.sleep(0.5)  # Kurz warten bis Mount sichtbar
+        except Exception as e:
+            print(f"[USB] Auto-Mount fehlgeschlagen: {e}")
+    
     # Mehrere mögliche Base-Pfade für verschiedene Raspbian-Versionen
     base_paths = [
         "/media/valentin",  # User valentin
