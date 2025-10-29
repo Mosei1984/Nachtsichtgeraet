@@ -306,10 +306,14 @@ def read_touch_events():
         if etype == 0x03:  # EV_ABS
             if code == ABS_X:
                 cur_x = value
-                norm_x = int(cur_x * 480 / 4095)  # ADS7846: 0-4095 -> 0-480
             elif code == ABS_Y:
                 cur_y = value
-                norm_y = int(cur_y * 320 / 4095)  # ADS7846: 0-4095 -> 0-320
+                
+            # Touch-Kalibrierung für LCD35-show (Achsen tauschen + X spiegeln)
+            temp_x = int(cur_y * 320 / 4095)  # Y-Achse -> Display-Höhe
+            temp_y = int(cur_x * 480 / 4095)  # X-Achse -> Display-Breite
+            norm_x = 320 - temp_x  # X spiegeln
+            norm_y = temp_y
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
