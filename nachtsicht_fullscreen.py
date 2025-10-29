@@ -400,9 +400,10 @@ def read_touch_events():
             # X-Achse: komprimiert 52-271 → gestreckt 40-440
             temp_x = int(cur_y * 479 / 4095)
             temp_x_flipped = 479 - temp_x
-            norm_x = int(1.826 * temp_x_flipped - 55)
-            # Y-Offset korrigieren: Buttons sind ~30px zu hoch
-            norm_y = int((cur_x - 286) * 194.0 / 1965.0) + 30
+            # X-Offset: 15px nach links (Tastatur war zu weit rechts)
+            norm_x = int(1.826 * temp_x_flipped - 55) - 15
+            # Y-Offset: 50px nach oben (Buttons waren zu tief)
+            norm_y = int((cur_x - 286) * 194.0 / 1965.0) + 50
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
@@ -422,10 +423,14 @@ def handle_gestures():
     plus timing-Logik für short/long/double/superlong.
     Prüft auch Terminal-Button Touch und Terminal-Tastatur.
     """
-    global state, click_pending, last_tap_time, usb_manager_active
+    global state, click_pending, last_tap_time, usb_manager_active, _stopping_video
 
     ups = read_touch_events()
     now = time.time()
+    
+    # Wenn Video gerade gestoppt wird, ignoriere alle Touches
+    if _stopping_video:
+        return
 
     # USB-Manager-Modus: Alle Touches an Manager weiterleiten
     if usb_manager_active and usb_manager and ups:
