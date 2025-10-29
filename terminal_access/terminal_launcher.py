@@ -115,9 +115,14 @@ class TerminalLauncher:
         """
         if not self.terminal_active or not self.keyboard:
             return False
-            
-        # Hit-Test auf Tastatur
-        key = self.keyboard.hit_test(x, y)
+        
+        # Y-Koordinaten-Korrektur für Tastatur
+        # Gemessener Offset: Touch kommt 82px zu hoch an
+        # (Zeile 1 @ y=194 wird als y=276 empfangen)
+        adjusted_y = y - 82
+        
+        # Hit-Test auf Tastatur mit korrigiertem Y
+        key = self.keyboard.hit_test(x, adjusted_y)
         
         if key:
             # Taste verarbeiten
