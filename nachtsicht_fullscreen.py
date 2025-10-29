@@ -60,7 +60,20 @@ FBIOGET_VSCREENINFO = 0x4600
 # SPEICHER / USB
 ############################
 
+_usb_cache = None
+_usb_cache_time = 0
+
 def usb_mountpoint():
+    global _usb_cache, _usb_cache_time
+    now = time.time()
+    # Cache nur verwenden wenn Mountpoint noch existiert UND gemountet ist
+    if _usb_cache is not None and (now - _usb_cache_time) < 5.0:
+        if os.path.ismount(_usb_cache):
+            return _usb_cache
+        else:
+            print(f"[USB] Cache ungültig: {_usb_cache} nicht mehr gemountet")
+            _usb_cache = None
+    
     # Auto-Mount: Prüfe ob USB-Device existiert aber nicht gemountet
     usb_dev = "/dev/sda1"
     mount_target = "/media/usb"
