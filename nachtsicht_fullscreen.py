@@ -287,8 +287,11 @@ def stop_video():
     global state, video_out, _stopping_video
     if state == "recording":
         print("[VIDEO] STOP")
-        _stopping_video = True
         state = "live"
+        _stopping_video = True  # Flag SOFORT setzen
+        
+        # Kurze Pause damit Main-Loop das Flag sieht
+        time.sleep(0.05)
         
         worker = threading.Thread(target=_stop_video_thread, args=(rec_name, video_out))
         worker.daemon = True
