@@ -558,6 +558,9 @@ def main():
         usb_manager = USBManager(fb_width=W, fb_height=H)
         print("[TERMINAL] Terminal Access & USB Manager aktiviert")
 
+    # Letztes erfolgreiches Frame speichern
+    last_frame = None
+    
     try:
         while True:
             # Touch-Logik (z.B. Start/Stop Video, Foto, Shutdown)
@@ -587,8 +590,19 @@ def main():
                 time.sleep(0.01)
                 continue
 
-            # Kameraframe holen
-            frame = picam.capture_array()
+            # Während Video-Stop: verwende letztes Frame (capture_array blockiert)
+            if _stopping_video and last_frame is not None:
+                frame = last_frame
+            else:
+                # Kameraframe holen
+                try:
+                    frame = picam.capture_array()
+                    last_frame = frame  # Speichern für Freeze-Schutz
+                except Exception as e:
+                    if last_frame is not None:
+                        frame = last_frame  # Fallback auf letztes Frame
+                    else:
+                        raise
 
             # Nacht-Boost
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
