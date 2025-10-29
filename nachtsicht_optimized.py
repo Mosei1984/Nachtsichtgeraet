@@ -39,10 +39,18 @@ FBIOGET_VSCREENINFO = 0x4600
 _usb_cache = None
 _usb_cache_time = 0
 _usb_last_check = 0  # Für häufigere Hot-Unplug-Checks
+_manual_unmount = False  # Verhindert Auto-Mount nach manuellem Unmount
 
 def usb_mountpoint():
-    global _usb_cache, _usb_cache_time, _usb_last_check
+    global _usb_cache, _usb_cache_time, _usb_last_check, _manual_unmount
     now = time.time()
+    
+    # Wenn USB physisch entfernt wurde, manual_unmount Flag zurücksetzen
+    usb_dev = "/dev/sda1"
+    if not os.path.exists(usb_dev):
+        if _manual_unmount:
+            print(f"[USB] Device entfernt, Auto-Mount wieder aktiviert")
+            _manual_unmount = False
     
     # Häufige Checks (alle 2s) ob noch gemountet, auch wenn Cache gültig
     if _usb_cache is not None and (now - _usb_last_check) > 2.0:
@@ -61,10 +69,10 @@ def usb_mountpoint():
             _usb_cache = None
     
     # Auto-Mount: Prüfe ob USB-Device existiert aber nicht gemountet
-    usb_dev = "/dev/sda1"
+    # ABER: Überspringe wenn manuell unmountet wurde
     mount_target = "/media/usb"
     
-    if os.path.exists(usb_dev) and not os.path.ismount(mount_target):
+    if os.path.exists(usb_dev) and not os.path.ismount(mount_target) and not _manual_unmount:
         print(f"[USB] {usb_dev} gefunden aber nicht gemountet")
         os.makedirs(mount_target, exist_ok=True)
         try:
