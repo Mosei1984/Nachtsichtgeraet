@@ -66,16 +66,9 @@ def usb_mountpoint():
         return None
     for e in os.scandir(base):
         if e.is_dir() and e.name.startswith("usb"):
-            # Prüfe ob tatsächlich gemountet (nicht nur leeres Verzeichnis)
-            try:
-                # Wenn gemountet, hat es andere stat device number als parent
-                if os.path.ismount(e.path):
-                    return e.path
-                # Alternativ: prüfe ob nicht leer
-                elif any(os.scandir(e.path)):
-                    return e.path
-            except (PermissionError, OSError):
-                continue
+            # NUR wenn tatsächlich als Mountpoint gemountet
+            if os.path.ismount(e.path):
+                return e.path
     return None
 
 def ensure_dirs():
