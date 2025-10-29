@@ -38,16 +38,17 @@ class VirtualKeyboard:
         ['CTRL', 'ESC', 'TAB', 'SPACE', 'ABC', 'LF', 'DN', 'RT', 'EXIT']
     ]
     
-    def __init__(self, width=480, height=140, y_offset=180):
+    def __init__(self, width=400, height=140, y_offset=180):
         """
         Args:
-            width: Breite der Tastatur (Display-Breite)
+            width: Breite der Tastatur (reduziert auf 400px wegen Touch-Reichweite)
             height: Höhe der Tastatur
             y_offset: Y-Position wo Tastatur beginnt (Rest für Terminal)
         """
         self.width = width
         self.height = height
         self.y_offset = y_offset
+        self.x_offset = 40  # Zentriert: (480-400)/2 = 40px links
         
         self.shift_active = False
         self.ctrl_active = False
@@ -71,7 +72,7 @@ class VirtualKeyboard:
             y = self.y_offset + (row_idx * row_height)
             num_keys = len(row)
             
-            x_pos = 0
+            x_pos = self.x_offset  # Start bei x_offset statt 0
             for key_idx, key in enumerate(row):
                 # Breite je nach Taste anpassen
                 if key == 'SPACE':

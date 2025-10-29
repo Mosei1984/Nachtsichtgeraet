@@ -56,8 +56,8 @@ class TerminalLauncher:
             self.terminal = TerminalEmulator(width=480, height=180, cols=60, rows=20)
             self.terminal.start(shell="/bin/bash")
             
-            # Virtuelle Tastatur initialisieren (480x140, startet bei Y=180)
-            self.keyboard = VirtualKeyboard(width=480, height=140, y_offset=180)
+            # Virtuelle Tastatur initialisieren (400px breit, zentriert)
+            self.keyboard = VirtualKeyboard(width=400, height=140, y_offset=180)
             
             self.terminal_active = True
             print("[TERMINAL] Integriertes Terminal gestartet")
