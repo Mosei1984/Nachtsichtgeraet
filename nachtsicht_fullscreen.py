@@ -401,7 +401,7 @@ def read_touch_events():
             temp_x = int(cur_y * 479 / 4095)
             temp_x_flipped = 479 - temp_x
             # X-Offset: 15px nach links (Tastatur war zu weit rechts)
-            norm_x = int(1.826 * temp_x_flipped - 55) - 45
+            norm_x = int(1.826 * temp_x_flipped - 55) 
             # Y-Offset: 50px nach oben (Buttons waren zu tief)
             norm_y = int((cur_x - 286) * 194.0 / 1965.0) + 50
 
