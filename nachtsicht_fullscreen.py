@@ -460,11 +460,15 @@ def handle_gestures():
                     if terminal_launcher:
                         terminal_launcher.toggle_terminal()
                     return
-                # USB-Button (rechts oben, größerer Bereich)
-                usb_btn_x = 430
-                usb_btn_y = 5
-                usb_btn_w = 45
-                usb_btn_h = 40
+                # USB-Button (rechts neben Terminal-Button)
+                term_btn_x = 10
+                term_btn_y = fb_h - 40  # 280
+                term_btn_w = 70
+                term_btn_h = 30
+                usb_btn_x = term_btn_x + term_btn_w + 10  # 90
+                usb_btn_y = term_btn_y  # 280
+                usb_btn_w = 70
+                usb_btn_h = 30
                 print(f"[TOUCH-DEBUG] x={norm_x:.0f}, y={norm_y:.0f}, USB-area: {usb_btn_x}-{usb_btn_x+usb_btn_w}, {usb_btn_y}-{usb_btn_y+usb_btn_h}")
                 if (usb_btn_x <= norm_x <= usb_btn_x + usb_btn_w and
                     usb_btn_y <= norm_y <= usb_btn_y + usb_btn_h):
@@ -606,11 +610,11 @@ def main():
             if TERMINAL_AVAILABLE and terminal_button:
                 terminal_button.draw(disp)
             
-            # USB-Button zeichnen (rechts oben, größerer Bereich)
+            # USB-Button zeichnen (rechts neben Terminal-Button)
             if TERMINAL_AVAILABLE:
                 usb_color = (100, 255, 100) if usb_mountpoint() else (150, 150, 150)
-                cv2.rectangle(disp, (430, 5), (475, 45), usb_color, 2)
-                cv2.putText(disp, "USB", (435, 30), 
+                cv2.rectangle(disp, (90, H-40), (160, H-10), usb_color, 2)
+                cv2.putText(disp, "USB", (100, H-20), 
                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, usb_color, 2, cv2.LINE_AA)
 
             # zum Display pushen
