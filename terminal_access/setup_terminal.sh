@@ -26,11 +26,12 @@ done
 
 echo ""
 echo "[2/4] Python3-Pakete installieren..."
-apt-get install -y python3-pip
+apt-get install -y python3-pip python3-pillow
 
 echo ""
 echo "[3/4] pyte Terminal Emulator Library installieren..."
-pip3 install pyte
+# Verwende --break-system-packages für externally-managed-environment
+pip3 install --break-system-packages pyte
 echo "pyte installiert"
 
 echo ""
