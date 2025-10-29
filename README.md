@@ -1,4 +1,6 @@
-# Nachtsichtgerät (Night Vision Device)
+# Nachtsichtgerät
+
+**IR-optimiertes Nachtsichtgerät mit Touchscreen-Steuerung und Terminal-Zugriff** (Night Vision Device)
 
 [![CI](https://github.com/Mosei1984/Nachtsichtgeraet/actions/workflows/ci.yml/badge.svg)](https://github.com/Mosei1984/Nachtsichtgeraet/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -25,6 +27,10 @@ Raspberry Pi 3 B basiertes Nachtsichtgerät mit Touchscreen-Steuerung.
 - USB-Speicher Support mit Fallback
 - Grünes HUD mit Statusanzeige
 - Sicherer Shutdown per Touch
+- **Touchscreen-Terminal-Zugriff** ohne externe Peripherie (NEU!)
+  - On-Screen Terminal-Button
+  - Virtuelle Tastatur
+  - Vollständiger System-Zugriff für Updates & Wartung
 
 ## Touch-Gesten
 
@@ -39,52 +45,104 @@ Raspberry Pi 3 B basiertes Nachtsichtgerät mit Touchscreen-Steuerung.
 ### RECORDING Modus
 - **Kurzer Tap**: Video stoppen
 
+### Terminal-Zugriff
+- **Terminal-Button** (unten links, orange): Terminal öffnen/schließen
+- Virtuelle Tastatur startet automatisch
+- Vollständiger Zugriff auf System-Kommandos
+
 ## Installation
 
-### Automatische Installation (empfohlen)
+### Einfache Installation (empfohlen)
+
+Auf frischem Raspbian OS:
 
 ```bash
-# Repository klonen oder Dateien auf Raspberry Pi kopieren
+# Repository klonen
 git clone https://github.com/Mosei1984/Nachtsichtgeraet.git
 cd Nachtsichtgeraet
 
-# Setup-Skript ausführen
+# Setup ausführen
 sudo bash setup.sh
 ```
 
-Das Setup-Skript führt automatisch folgende Schritte aus:
-1. System aktualisieren
-2. Abhängigkeiten installieren (python3-opencv, python3-picamera2, python3-numpy)
-3. Arbeitsverzeichnis `/opt/nachtsicht` erstellen
-4. Python-Skripte nach `/opt/nachtsicht` kopieren
-5. USB-Mount-Verzeichnis `/media/usb` vorbereiten
-6. Systemd-Service installieren und aktivieren
+**Das war's!** Das Script macht alles automatisch:
 
-Nach dem Setup:
+1. **Installiert Display-Treiber** (falls `/dev/fb1` nicht existiert)
+   - LCD-show für 3.5" SPI Display
+   - **Startet automatisch neu** → danach `sudo bash setup.sh` nochmal ausführen
+2. **Installiert Python-Abhängigkeiten**
+   - python3-opencv, python3-picamera2, python3-numpy
+3. **Richtet Programm ein**
+   - Kopiert nach `/opt/nachtsicht`
+   - Erstellt Autostart-Service
+4. **Fragt nach Terminal-Access** (optional)
+   - lxterminal + matchbox-keyboard
+   - Für Touchscreen-Terminal ohne externe Tastatur
+
+### Installation Workflow
+
 ```bash
-# Raspberry Pi neu starten (Service startet automatisch)
+# Erstes Mal (falls Display nicht eingerichtet)
+sudo bash setup.sh
+# → Installiert Display-Treiber
+# → System startet neu
+
+# Nach Neustart
+sudo bash setup.sh
+# → Installiert Programm
+# → Fragt nach Terminal-Access
+
+# Fertig
+sudo reboot
+```
+
+### Nach der Installation
+
+```bash
+# Raspberry Pi neu starten
 sudo reboot
 
-# Oder Service manuell starten
-sudo systemctl start nachtsicht.service
+# Nachtsicht startet automatisch!
+# - Display zeigt Kamera-Interface
+# - Doppel-Tap zum Starten
+```
 
+**Service-Befehle:**
+```bash
 # Status prüfen
 sudo systemctl status nachtsicht.service
 
-# Live-Logs anzeigen
+# Logs anzeigen
 sudo journalctl -u nachtsicht.service -f
+
+# Manuell starten/stoppen
+sudo systemctl start nachtsicht.service
+sudo systemctl stop nachtsicht.service
 ```
 
-### Manuelle Installation
+### Erweiterte Optionen
 
+**Terminal-Access nachträglich installieren:**
+```bash
+cd /opt/nachtsicht/terminal_access
+sudo bash setup_terminal.sh
+```
+
+**Manuelle Installation ohne Service:**
 ```bash
 # Dependencies
 sudo apt-get update
 sudo apt-get install python3-opencv python3-picamera2 python3-numpy
 
-# Projekt starten
-python3 nachtsicht_optimized.py
+# Display-Treiber (falls nötig)
+git clone https://github.com/goodtft/LCD-show.git
+cd LCD-show && sudo ./LCD35-show
+
+# Programm direkt starten
+python3 nachtsicht_fullscreen.py
 ```
+
+Siehe [INSTALL.md](INSTALL.md) für detaillierte Anleitung.
 
 ## Optimierungen
 

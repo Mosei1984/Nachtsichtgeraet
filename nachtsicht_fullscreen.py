@@ -34,6 +34,14 @@ from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FileOutput
 
+try:
+    from terminal_access.terminal_launcher import TerminalLauncher
+    from terminal_access.touch_button import TerminalButton
+    TERMINAL_AVAILABLE = True
+except ImportError:
+    TERMINAL_AVAILABLE = False
+    print("[WARN] Terminal Access Modul nicht verfügbar")
+
 ############################
 # KONFIG
 ############################
@@ -258,6 +266,9 @@ down_time = 0.0
 click_pending = False
 last_tap_time = 0.0
 
+terminal_launcher = None
+terminal_button = None
+
 def open_touch():
     global touch_fd
     try:
@@ -312,11 +323,22 @@ def handle_gestures():
     """
     Nutzt die "ups" Events (Finger losgelassen),
     plus timing-Logik für short/long/double/superlong.
+    Prüft auch Terminal-Button Touch.
     """
     global state, click_pending, last_tap_time
 
     ups = read_touch_events()
     now = time.time()
+
+    # Terminal-Button prüfen (nur bei kurzen Taps und wenn verfügbar)
+    if TERMINAL_AVAILABLE and terminal_button and ups:
+        for press_len in ups:
+            if press_len < SHORT_LONG:
+                if terminal_button.is_touched(cur_x, cur_y):
+                    print("[TOUCH] Terminal-Button aktiviert")
+                    if terminal_launcher:
+                        terminal_launcher.toggle_terminal()
+                    return
 
     # Long-hold auswerten (wenn Finger weiterhin down ist)
     # Für super-long-shutdown brauchen wir nicht loslassen, aber in idle nur.
@@ -376,13 +398,18 @@ def handle_gestures():
 ############################
 
 def main():
-    global state
+    global state, terminal_launcher, terminal_button
 
     print("NightCam Touch start")
     picam.start()
     open_touch()
 
     fbfd, fbmem, W, H, BPP = open_fb(FB_PATH)
+    
+    if TERMINAL_AVAILABLE:
+        terminal_launcher = TerminalLauncher(FB_PATH, TOUCH_DEV)
+        terminal_button = TerminalButton(x=10, y=H-40, width=70, height=30)
+        print("[TERMINAL] Terminal Access aktiviert")
 
     try:
         while True:
@@ -413,6 +440,10 @@ def main():
                     disp, "REC", (W-90,35),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2, cv2.LINE_AA
                 )
+            
+            # Terminal-Button zeichnen
+            if TERMINAL_AVAILABLE and terminal_button:
+                terminal_button.draw(disp)
 
             # zum Display pushen
             fb_draw(disp, fbmem, W, H)
@@ -426,6 +457,8 @@ def main():
     finally:
         if state == "recording":
             stop_video()
+        if terminal_launcher:
+            terminal_launcher.cleanup()
         picam.stop()
         fbmem.close()
         os.close(fbfd)
