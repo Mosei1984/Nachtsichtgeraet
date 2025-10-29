@@ -460,12 +460,16 @@ def handle_gestures():
                     if terminal_launcher:
                         terminal_launcher.toggle_terminal()
                     return
-                # USB-Button (rechts oben, neben Terminal)
-                usb_btn_x = 440
-                usb_btn_y = 10
-                usb_btn_size = 30
-                if (usb_btn_x <= norm_x * fb_w <= usb_btn_x + usb_btn_size and
-                    usb_btn_y <= norm_y * fb_h <= usb_btn_y + usb_btn_size):
+                # USB-Button (rechts oben, größerer Bereich)
+                usb_btn_x = 430
+                usb_btn_y = 5
+                usb_btn_w = 45
+                usb_btn_h = 40
+                touch_x = norm_x * fb_w
+                touch_y = norm_y * fb_h
+                print(f"[TOUCH-DEBUG] x={touch_x:.0f}, y={touch_y:.0f}, USB-area: {usb_btn_x}-{usb_btn_x+usb_btn_w}, {usb_btn_y}-{usb_btn_y+usb_btn_h}")
+                if (usb_btn_x <= touch_x <= usb_btn_x + usb_btn_w and
+                    usb_btn_y <= touch_y <= usb_btn_y + usb_btn_h):
                     print("[TOUCH] USB-Manager aktiviert")
                     usb_manager_active = True
                     return
@@ -604,12 +608,12 @@ def main():
             if TERMINAL_AVAILABLE and terminal_button:
                 terminal_button.draw(disp)
             
-            # USB-Button zeichnen (rechts oben)
+            # USB-Button zeichnen (rechts oben, größerer Bereich)
             if TERMINAL_AVAILABLE:
                 usb_color = (100, 255, 100) if usb_mountpoint() else (150, 150, 150)
-                cv2.rectangle(disp, (440, 10), (470, 40), usb_color, 2)
-                cv2.putText(disp, "USB", (443, 32), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, usb_color, 1, cv2.LINE_AA)
+                cv2.rectangle(disp, (430, 5), (475, 45), usb_color, 2)
+                cv2.putText(disp, "USB", (435, 30), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, usb_color, 2, cv2.LINE_AA)
 
             # zum Display pushen
             fb_draw(disp, fbmem, W, H)
