@@ -39,20 +39,28 @@ class TerminalLauncher:
             env['TSLIB_TSDEVICE'] = self.touch_device
             env['DISPLAY'] = ':0'
             
+            # Für 480x320 Display optimierte Größe
+            # 60 Spalten x 20 Zeilen passt gut auf 480x320
             self.terminal_process = subprocess.Popen(
-                [TERMINAL_CMD, '--geometry=480x320'],
+                [TERMINAL_CMD, 
+                 '--geometry=60x20',
+                 '--title=Nachtsicht Terminal',
+                 '-e', 'bash'],
                 env=env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
             )
             self.terminal_active = True
+            print(f"[TERMINAL] Gestartet (PID: {self.terminal_process.pid})")
             logger.info("Terminal erfolgreich gestartet")
             return True
             
         except FileNotFoundError:
+            print(f"[TERMINAL] FEHLER: {TERMINAL_CMD} nicht gefunden")
             logger.error(f"{TERMINAL_CMD} nicht gefunden. Installation: sudo apt-get install lxterminal")
             return False
         except Exception as e:
+            print(f"[TERMINAL] FEHLER: {e}")
             logger.error(f"Fehler beim Starten des Terminals: {e}")
             return False
             
