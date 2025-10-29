@@ -111,26 +111,19 @@ def usb_mountpoint():
     ]
     
     for base in base_paths:
-        print(f"[USB] Suche in {base}")
         if not os.path.isdir(base):
             continue
         
         for e in os.scandir(base):
             if e.is_dir() and e.name.startswith("usb"):
-                print(f"[USB] Gefunden: {e.path}")
                 # NUR wenn tatsächlich als Mountpoint gemountet
                 if os.path.ismount(e.path):
-                    print(f"[USB] Mountpoint: {e.path}")
                     return e.path
-                else:
-                    print(f"[USB] {e.path} ist kein Mountpoint")
     
-    print(f"[USB] Mountpoint: None")
     return None
 
 def ensure_dirs():
     usb = usb_mountpoint()
-    print(f"[USB] Result: {usb}")
     if usb:
         pdir = os.path.join(usb, "Nachtsicht_Fotos")
         vdir = os.path.join(usb, "Nachtsicht_Videos")
@@ -141,8 +134,6 @@ def ensure_dirs():
         vdir = os.path.join(home, "Nachtsicht_Videos")
     os.makedirs(pdir, exist_ok=True)
     os.makedirs(vdir, exist_ok=True)
-    print(f"[DIRS] Fotos: {pdir}")
-    print(f"[DIRS] Videos: {vdir}")
     return pdir, vdir
 
 def next_photo():

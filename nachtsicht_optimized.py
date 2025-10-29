@@ -88,29 +88,21 @@ def usb_mountpoint():
     _usb_cache = None
     
     for base in base_paths:
-        print(f"[USB] Suche in {base}")
         if not os.path.isdir(base):
             continue
         
         for e in os.scandir(base):
             if e.is_dir() and e.name.startswith("usb"):
-                print(f"[USB] Gefunden: {e.path}")
                 # Prüfe ob tatsächlich als Mountpoint gemountet
                 if os.path.ismount(e.path):
                     _usb_cache = e.path
-                    print(f"[USB] Mountpoint: {_usb_cache}")
                     _usb_cache_time = now
                     return _usb_cache
-                else:
-                    print(f"[USB] {e.path} ist kein Mountpoint")
-    
-    print(f"[USB] Mountpoint: {_usb_cache}")
     _usb_cache_time = now
     return _usb_cache
 
 def ensure_dirs():
     usb = usb_mountpoint()
-    print(f"[USB] Result: {usb}")
     if usb:
         pdir = os.path.join(usb, "Nachtsicht_Fotos")
         vdir = os.path.join(usb, "Nachtsicht_Videos")
@@ -121,8 +113,6 @@ def ensure_dirs():
         vdir = os.path.join(home, "Nachtsicht_Videos")
     os.makedirs(pdir, exist_ok=True)
     os.makedirs(vdir, exist_ok=True)
-    print(f"[DIRS] Fotos: {pdir}")
-    print(f"[DIRS] Videos: {vdir}")
     return pdir, vdir
 
 def next_photo():
