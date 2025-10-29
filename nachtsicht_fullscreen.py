@@ -318,11 +318,14 @@ def read_touch_events():
             elif code == ABS_Y:
                 cur_y = value
                 
-            # Touch-Transformation die für Terminal-Button FUNKTIONIERT
-            temp_x = int(cur_y * 320 / 4095)
-            temp_y = int(cur_x * 480 / 4095)
-            norm_x = 320 - temp_x  # X spiegeln
-            norm_y = temp_y        # Y NICHT spiegeln (Button: 38,281 ✓)
+            # Touch-Kalibrierung für LCD35-show
+            # Achsen tauschen: raw_y->display_x, raw_x->display_y
+            # Display: 480x320, Touch: 0-4095
+            # Skalierung: X auf 0-479, Y auf 0-319
+            temp_x = int(cur_y * 479 / 4095)  # Raw-Y -> X-Achse (0-479)
+            temp_y = int(cur_x * 319 / 4095)  # Raw-X -> Y-Achse (0-319)
+            norm_x = 479 - temp_x  # X spiegeln
+            norm_y = temp_y        # Y nicht spiegeln
 
         elif etype == 0x01 and code == BTN_TOUCH:
             # value 1 = down, 0 = up
