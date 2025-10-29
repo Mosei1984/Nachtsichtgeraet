@@ -17,8 +17,12 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo ""
-echo "[1/4] System aktualisieren..."
-apt-get update
+echo "[1/4] Warte auf apt-Lock..."
+# Warte bis apt-Lock frei ist
+while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
+    echo "  apt wird gerade verwendet, warte..."
+    sleep 2
+done
 
 echo ""
 echo "[2/4] Terminal Emulator (lxterminal) installieren..."
