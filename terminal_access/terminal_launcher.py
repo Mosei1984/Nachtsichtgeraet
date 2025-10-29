@@ -14,8 +14,10 @@ logger = logging.getLogger(__name__)
 FB_DEVICE = "/dev/fb1"
 TOUCH_DEVICE = "/dev/input/event0"
 
-TERMINAL_CMD = "lxterminal"
-KEYBOARD_CMD = "matchbox-keyboard"
+# fbterm läuft direkt auf Framebuffer (kein X11 nötig)
+TERMINAL_CMD = "fbterm"
+# onboard läuft mit Wayland/X11, brauchen wir vorerst nicht
+KEYBOARD_CMD = None  # Erstmal ohne virtuelle Tastatur
 
 class TerminalLauncher:
     """Verwaltet Terminal und virtuelle Tastatur Prozesse"""
@@ -36,28 +38,27 @@ class TerminalLauncher:
         try:
             env = os.environ.copy()
             env['FRAMEBUFFER'] = self.fb_device
-            env['TSLIB_TSDEVICE'] = self.touch_device
-            env['DISPLAY'] = ':0'
             
-            # Für 480x320 Display optimierte Größe
-            # 60 Spalten x 20 Zeilen passt gut auf 480x320
+            # fbterm Optionen:
+            # -s 0 = Font size 0 (klein, passt mehr auf Display)
+            # --vt-switch = Erlaubt VT switching
             self.terminal_process = subprocess.Popen(
-                [TERMINAL_CMD, 
-                 '--geometry=60x20',
-                 '--title=Nachtsicht Terminal',
-                 '-e', 'bash'],
+                [TERMINAL_CMD, '-s', '0'],
                 env=env,
+                stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
             self.terminal_active = True
-            print(f"[TERMINAL] Gestartet (PID: {self.terminal_process.pid})")
+            print(f"[TERMINAL] fbterm gestartet (PID: {self.terminal_process.pid})")
+            print(f"[TERMINAL] Tippe nochmal auf TERM-Button zum Beenden")
             logger.info("Terminal erfolgreich gestartet")
             return True
             
         except FileNotFoundError:
             print(f"[TERMINAL] FEHLER: {TERMINAL_CMD} nicht gefunden")
-            logger.error(f"{TERMINAL_CMD} nicht gefunden. Installation: sudo apt-get install lxterminal")
+            print(f"[TERMINAL] Installation: sudo apt-get install fbterm")
+            logger.error(f"{TERMINAL_CMD} nicht gefunden. Installation: sudo apt-get install fbterm")
             return False
         except Exception as e:
             print(f"[TERMINAL] FEHLER: {e}")
@@ -65,7 +66,13 @@ class TerminalLauncher:
             return False
             
     def launch_keyboard(self):
-        """Startet virtuelle Tastatur"""
+        """Startet virtuelle Tastatur (aktuell deaktiviert für fbterm)"""
+        # fbterm hat keine virtuelle Tastatur - Nutzung mit externer Tastatur
+        # oder SSH empfohlen
+        if KEYBOARD_CMD is None:
+            logger.info("Virtuelle Tastatur nicht verfügbar für fbterm")
+            return False
+            
         if self.keyboard_process and self.keyboard_process.poll() is None:
             logger.info("Tastatur bereits aktiv")
             return True

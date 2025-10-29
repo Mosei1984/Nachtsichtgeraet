@@ -25,41 +25,41 @@ while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 ; do
 done
 
 echo ""
-echo "[2/4] Terminal Emulator (lxterminal) installieren..."
-apt-get install -y lxterminal
+echo "[2/4] Framebuffer Terminal (fbterm) installieren..."
+apt-get install -y fbterm
 
 echo ""
-echo "[3/4] Virtuelle Tastatur (matchbox-keyboard) installieren..."
-apt-get install -y matchbox-keyboard
+echo "[3/4] User zu video Gruppe hinzufügen..."
+# fbterm braucht Zugriff auf Framebuffer
+usermod -a -G video $SUDO_USER 2>/dev/null || usermod -a -G video pi
+echo "User zur video Gruppe hinzugefügt"
 
 echo ""
-echo "[4/4] Alternative: Onboard Tastatur (optional)..."
-read -p "Möchten Sie zusätzlich Onboard installieren? (j/N): " choice
-case "$choice" in 
-  j|J|y|Y ) 
-    apt-get install -y onboard
-    echo "Onboard installiert"
-    ;;
-  * ) 
-    echo "Onboard übersprungen"
-    ;;
-esac
+echo "[4/4] fbterm Berechtigungen setzen..."
+# fbterm braucht setuid für direkten Framebuffer-Zugriff
+chmod u+s /usr/bin/fbterm 2>/dev/null || true
+echo "Berechtigungen gesetzt"
 
 echo ""
 echo "======================================"
 echo "Installation abgeschlossen!"
 echo "======================================"
 echo ""
+echo "WICHTIG: System neu starten für Gruppen-Änderungen:"
+echo "  sudo reboot"
+echo ""
 echo "Verwendung:"
 echo "  - Terminal-Button im Nachtsicht-Interface antippen"
-echo "  - Terminal öffnet sich auf dem Display"
-echo "  - Virtuelle Tastatur erscheint automatisch"
+echo "  - fbterm öffnet sich auf /dev/fb1"
+echo "  - Bedienung mit externer USB-Tastatur"
+echo "  - Oder via SSH für Eingaben"
 echo ""
 echo "Konfiguration:"
 echo "  - Display: /dev/fb1 (SPI)"
-echo "  - Touch: /dev/input/event0 (ADS7846)"
+echo "  - Terminal: fbterm (Framebuffer-basiert)"
 echo ""
 echo "Hinweis:"
-echo "  Für Netzwerkzugriff WiFi/Ethernet konfigurieren"
-echo "  Updates: sudo apt-get update && sudo apt-get upgrade"
+echo "  fbterm läuft direkt auf Framebuffer (kein X11 nötig)"
+echo "  Für Eingaben externe USB-Tastatur verwenden"
+echo "  Oder via SSH verbinden: ssh valentin@NigthCam.local"
 echo ""
