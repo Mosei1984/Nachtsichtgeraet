@@ -53,10 +53,10 @@ class TerminalEmulator:
         
         self.running = False
         
-        # Zeichensatz-Parameter
+        # Zeichensatz-Parameter - optimiert für 480x180 auf kleinem Display
         self.char_width = 8
-        self.char_height = 9
-        self.font_scale = 0.35
+        self.char_height = 12
+        self.font_scale = 0.6  # Größer für Lesbarkeit
         self.font_thickness = 1
         
     def start(self, shell="/bin/bash"):

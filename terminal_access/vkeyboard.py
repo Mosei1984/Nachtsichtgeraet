@@ -13,29 +13,29 @@ class VirtualKeyboard:
     Virtuelle On-Screen Tastatur mit mehreren Layouts
     """
     
-    # Tastatur-Layouts
+    # Tastatur-Layouts - kompakt für 480px Breite
     LAYOUT_NORMAL = [
-        ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'BKSP'],
-        ['TAB', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\'],
-        ['ESC', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", 'ENTER'],
-        ['SHIFT', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'UP', 'SHIFT'],
-        ['CTRL', 'ALT', 'SYM', 'SPACE', 'SYM', 'LEFT', 'DOWN', 'RIGHT', 'EXIT']
+        ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'BKSP'],
+        ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+        ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ENTER'],
+        ['SHIFT', 'z', 'x', 'c', 'v', 'b', 'n', 'm', '.', '/', 'UP'],
+        ['CTRL', 'ESC', 'TAB', 'SPACE', 'SYM', 'LF', 'DN', 'RT', 'EXIT']
     ]
     
     LAYOUT_SHIFT = [
-        ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 'BKSP'],
-        ['TAB', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '|'],
-        ['ESC', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', 'ENTER'],
-        ['SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 'UP', 'SHIFT'],
-        ['CTRL', 'ALT', 'SYM', 'SPACE', 'SYM', 'LEFT', 'DOWN', 'RIGHT', 'EXIT']
+        ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', 'BKSP'],
+        ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+        ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'ENTER'],
+        ['SHIFT', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '?', 'UP'],
+        ['CTRL', 'ESC', 'TAB', 'SPACE', 'SYM', 'LF', 'DN', 'RT', 'EXIT']
     ]
     
     LAYOUT_SYMBOLS = [
-        ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'BKSP'],
-        ['TAB', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\\'],
-        ['ESC', '~', '{', '}', '[', ']', '|', ';', ':', "'", '"', '<', 'ENTER'],
-        ['SHIFT', '/', '?', '.', ',', '<', '>', '=', '+', '-', '_', 'UP', 'SHIFT'],
-        ['CTRL', 'ALT', 'ABC', 'SPACE', 'ABC', 'LEFT', 'DOWN', 'RIGHT', 'EXIT']
+        ['~', '`', '-', '=', '[', ']', '\\', ';', "'", '"', 'BKSP'],
+        ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')'],
+        ['{', '}', '|', '<', '>', '_', '+', ':', ';', 'ENTER'],
+        ['SHIFT', '/', '?', ',', '.', '-', '=', '+', '_', '|', 'UP'],
+        ['CTRL', 'ESC', 'TAB', 'SPACE', 'ABC', 'LF', 'DN', 'RT', 'EXIT']
     ]
     
     def __init__(self, width=480, height=140, y_offset=180):
@@ -211,11 +211,11 @@ class VirtualKeyboard:
             key_bytes = b' '
         elif key_label == 'UP':
             key_bytes = b'\x1b[A'
-        elif key_label == 'DOWN':
+        elif key_label in ['DOWN', 'DN']:
             key_bytes = b'\x1b[B'
-        elif key_label == 'RIGHT':
+        elif key_label in ['RIGHT', 'RT']:
             key_bytes = b'\x1b[C'
-        elif key_label == 'LEFT':
+        elif key_label in ['LEFT', 'LF']:
             key_bytes = b'\x1b[D'
         elif len(key_label) == 1:
             # Normales Zeichen
