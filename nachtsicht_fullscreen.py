@@ -111,6 +111,12 @@ def next_video():
             pass
     return os.path.join(vdir, f"Nachtsicht_Video{n+1}.h264")
 
+def next_video_ts():
+    _, vdir = ensure_dirs()
+    ts = time.strftime("%Y-%m-%d_%H%M%S")
+    us = int((time.time() % 1) * 1_000_000)
+    return os.path.join(vdir, f"Nachtsicht_Video_{ts}_{us:06d}.h264")
+
 def free_bytes_path():
     path = usb_mountpoint() or os.path.expanduser("~")
     st2 = shutil.disk_usage(path)
@@ -210,10 +216,9 @@ def _stop_video_thread(rec_file, out_handle):
 
 def start_video():
     global state, rec_name, video_out, _stopping_video
-    if _stopping_video:
-        print("[VIDEO] START ignoriert - Stop läuft noch")
+    if _stopping_video or state == "recording":
         return
-    rec_name = next_video()
+    rec_name = next_video_ts()
     print(f"[VIDEO] START -> {rec_name}")
     video_out = FileOutput(rec_name)
     picam.start_recording(encoder, video_out)

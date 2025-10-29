@@ -83,6 +83,23 @@ def next_video():
             default=0)
     return os.path.join(vdir, f"Nachtsicht_Video{n+1}.h264")
 
+def next_video_ts():
+    _, vdir = ensure_dirs()
+    ts = time.strftime("%Y-%m-%d_%H%M%S")
+    us = int((time.time() % 1) * 1_000_000)
+    filename = f"Nachtsicht_Video_{ts}_{us:06d}.h264"
+    path = os.path.join(vdir, filename)
+    
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        os.close(fd)
+        return path
+    except FileExistsError:
+        time.sleep(0.001)
+        us = int((time.time() % 1) * 1_000_000)
+        filename = f"Nachtsicht_Video_{ts}_{us:06d}.h264"
+        return os.path.join(vdir, filename)
+
 _free_bytes_cache = 0
 _free_bytes_time = 0
 
@@ -188,7 +205,9 @@ def take_photo():
 
 def start_video():
     global state, rec_name, video_out
-    rec_name = next_video()
+    if _stopping_video or state == "recording":
+        return
+    rec_name = next_video_ts()
     print(f"[VIDEO] START -> {rec_name}")
     video_out = FileOutput(rec_name)
     picam.start_recording(encoder, video_out)
