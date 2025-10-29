@@ -188,8 +188,13 @@ class TerminalEmulator:
         for row_idx, line in enumerate(self.screen.display):
             y = y_offset + (row_idx * self.char_height) + self.char_height
             
-            # Zeile zusammensetzen
-            text = "".join(char.data for char in line)
+            # Zeile zusammensetzen - API-Kompatibilität
+            if line and hasattr(line[0], 'data'):
+                # Alte pyte API
+                text = "".join(char.data for char in line)
+            else:
+                # Neue pyte API
+                text = "".join(line)
             
             if text.strip():  # Nur nicht-leere Zeilen zeichnen
                 cv2.putText(
@@ -238,6 +243,12 @@ class TerminalEmulator:
         """
         lines = []
         for line in self.screen.display:
-            text = "".join(char.data for char in line)
+            # pyte API-Kompatibilität: neuere Versionen liefern Strings, ältere Char-Objekte
+            if line and hasattr(line[0], 'data'):
+                # Alte API: Char-Objekte mit .data Attribut
+                text = "".join(char.data for char in line)
+            else:
+                # Neue API: direkt Strings
+                text = "".join(line)
             lines.append(text)
         return "\n".join(lines)
