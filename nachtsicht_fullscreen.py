@@ -28,7 +28,7 @@
 #
 # Autor: Martin Hofer
 
-import os, time, glob, shutil, fcntl, mmap, struct, subprocess, sys, select, struct as st
+import os, time, glob, shutil, fcntl, mmap, struct, subprocess, sys, select, struct as st, threading
 import cv2, numpy as np
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder
@@ -181,6 +181,7 @@ video_out = None
 
 state = "idle"
 rec_name = None
+_stopping_video = False
 
 def take_photo():
     fn = next_photo()
@@ -191,8 +192,27 @@ def take_photo():
     ph, mn = estimate_capacity()
     print(f"[FOTO] {fn} | Rest ~{ph} Fotos / ~{mn} min Video")
 
+def _stop_video_thread(rec_file, out_handle):
+    global _stopping_video
+    try:
+        picam.stop_recording()
+    except Exception as e:
+        print(f"[VIDEO] ERROR stop_recording: {e}")
+    
+    if out_handle:
+        try:
+            out_handle.close()
+        except Exception as e:
+            print(f"[VIDEO] ERROR close: {e}")
+    
+    _stopping_video = False
+    print(f"[VIDEO] SAVED -> {rec_file}")
+
 def start_video():
-    global state, rec_name, video_out
+    global state, rec_name, video_out, _stopping_video
+    if _stopping_video:
+        print("[VIDEO] START ignoriert - Stop läuft noch")
+        return
     rec_name = next_video()
     print(f"[VIDEO] START -> {rec_name}")
     video_out = FileOutput(rec_name)
@@ -200,35 +220,28 @@ def start_video():
     state = "recording"
 
 def stop_video():
-    global state, video_out
+    global state, video_out, _stopping_video
     if state == "recording":
         print("[VIDEO] STOP")
-        try:
-            picam.stop_recording()
-            time.sleep(0.1)
-            
-            if video_out and hasattr(video_out, 'fileoutput') and hasattr(video_out.fileoutput, 'fileno'):
-                try:
-                    os.fsync(video_out.fileoutput.fileno())
-                except:
-                    pass
-            
-            if video_out:
-                video_out.close() if hasattr(video_out, 'close') else None
-                video_out = None
-            
-            os.sync()
-            print(f"[VIDEO] SAVED -> {rec_name}")
-        except Exception as e:
-            print(f"[VIDEO] ERROR beim Stoppen: {e}")
-        finally:
-            state = "live"
-            video_out = None
+        _stopping_video = True
+        state = "live"
+        
+        worker = threading.Thread(target=_stop_video_thread, args=(rec_name, video_out))
+        worker.daemon = True
+        worker.start()
+        
+        video_out = None
 
 def safe_shutdown():
+    global _stopping_video
     print("[SHUTDOWN] init")
     if state == "recording":
         stop_video()
+    
+    while _stopping_video:
+        print("[SHUTDOWN] warte auf Video-Stop...")
+        time.sleep(0.1)
+    
     os.sync()
 
     base = "/media"

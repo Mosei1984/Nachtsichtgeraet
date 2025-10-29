@@ -195,33 +195,36 @@ def start_video():
     state = "recording"
 
 def _stop_video_thread(rec_file):
-    global video_out, _stopping_video
+    global video_out, _stopping_video, _stop_thread
     try:
         picam.stop_recording()
         video_out = None
-        os.sync()
         print(f"[VIDEO] SAVED -> {rec_file}")
     except Exception as e:
         print(f"[VIDEO] ERROR: {e}")
         video_out = None
     finally:
         _stopping_video = False
+        _stop_thread = None
 
 _stopping_video = False
+_stop_thread = None
 
 def stop_video():
-    global state, _stopping_video
-    if state == "recording":
+    global state, _stopping_video, _stop_thread
+    if state == "recording" and not _stopping_video:
         print("[VIDEO] STOP")
         _stopping_video = True
         state = "live"
-        thread = threading.Thread(target=_stop_video_thread, args=(rec_name,), daemon=True)
-        thread.start()
+        _stop_thread = threading.Thread(target=_stop_video_thread, args=(rec_name,), daemon=False)
+        _stop_thread.start()
 
 def safe_reboot():
     print("[REBOOT] init")
     if state == "recording":
         stop_video()
+    if _stop_thread is not None:
+        _stop_thread.join(timeout=2.0)
     os.sync()
     print("[REBOOT] rebooting ...")
     subprocess.call(["sudo","reboot"])
@@ -230,6 +233,8 @@ def safe_shutdown():
     print("[SHUTDOWN] init")
     if state == "recording":
         stop_video()
+    if _stop_thread is not None:
+        _stop_thread.join(timeout=2.0)
     os.sync()
 
     base = "/media"
@@ -388,14 +393,6 @@ def main():
         while True:
             handle_gestures()
 
-            if _stopping_video:
-                time.sleep(0.05)
-                loop_count += 1
-                continue
-
-            if loop_count > 0:
-                loop_count = 0
-
             try:
                 frame = picam.capture_array()
             except Exception as e:
@@ -439,6 +436,8 @@ def main():
     finally:
         if state == "recording":
             stop_video()
+        if _stop_thread is not None:
+            _stop_thread.join(timeout=2.0)
         picam.stop()
         fbmem.close()
         os.close(fbfd)
